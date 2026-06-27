@@ -9,7 +9,7 @@ import AiConversationSearch from '@/components/AiConversationSearch.vue'
 // Stubs for Element Plus components used in AiConversationSearch
 const ElInputStub = {
   template: '<input :value="modelValue" :placeholder="placeholder" @input="$emit(\'update:modelValue\', $event.target.value)" @keyup.enter="$emit(\'keyup.enter\')" />',
-  props: ['modelValue', 'placeholder', 'clearable', 'size'],
+  props: ['modelValue', 'placeholder', 'clearable', 'size', 'prefixIcon'],
   emits: ['update:modelValue', 'keyup.enter', 'clear'],
 }
 const ElSelectStub = {
@@ -31,6 +31,19 @@ const ElButtonStub = {
   props: ['type', 'size', 'link', 'disabled', 'title'],
   emits: ['click'],
 }
+const ElPopoverStub = {
+  template: '<div class="el-popover"><slot name="reference" /><div v-if="visible" class="el-popover__content"><slot /></div></div>',
+  props: ['visible', 'placement', 'width', 'trigger', 'showArrow', 'offset'],
+  emits: ['update:visible'],
+}
+const ElTagStub = {
+  template: '<span class="el-tag"><slot /></span>',
+  props: ['type', 'size', 'effect'],
+}
+const ElIconStub = {
+  template: '<span class="el-icon"><slot /></span>',
+  props: ['size', 'color'],
+}
 
 const globalStubs = {
   ElInput: ElInputStub,
@@ -38,6 +51,9 @@ const globalStubs = {
   ElOption: ElOptionStub,
   ElDatePicker: ElDatePickerStub,
   ElButton: ElButtonStub,
+  ElPopover: ElPopoverStub,
+  ElTag: ElTagStub,
+  ElIcon: ElIconStub,
 }
 
 const mockSearchResult = {
@@ -115,7 +131,8 @@ describe('AiConversationSearch', () => {
     await input.setValue('表单')
 
     await vi.waitFor(() => {
-      const tags = wrapper.findAll('[class*="sourceTag"]')
+      // Source tags are rendered as el-tag elements
+      const tags = wrapper.findAll('.el-tag')
       expect(tags.length).toBe(2)
     }, { timeout: 3000 })
   })
@@ -211,31 +228,49 @@ describe('AiConversationSearch', () => {
 
   it('renders filter toggle button', () => {
     const wrapper = mount(AiConversationSearch, { global: { stubs: globalStubs } })
-    expect(wrapper.find('[class*="filterToggle"]').exists()).toBe(true)
+    // The filter toggle is a button inside el-popover's #reference slot
+    const buttons = wrapper.findAll('button')
+    expect(buttons.length).toBeGreaterThan(0)
+    // The filter toggle is the button inside the el-popover reference
+    expect(wrapper.find('.el-popover').exists()).toBe(true)
   })
 
   it('shows filter panel when toggle is clicked', async () => {
     const wrapper = mount(AiConversationSearch, { global: { stubs: globalStubs } })
 
-    await wrapper.find('[class*="filterToggle"]').trigger('click')
+    // Click the button inside el-popover reference slot
+    const popoverButton = wrapper.find('.el-popover button')
+    await popoverButton.trigger('click')
 
+    // After click, filtersExpanded toggles to true, which passes to el-popover :visible
+    // The filter panel (inside el-popover default slot) should render
+    await wrapper.vm.$nextTick()
     expect(wrapper.find('[class*="filterPanel"]').exists()).toBe(true)
   })
 
   it('hides filter panel when toggle is clicked again', async () => {
     const wrapper = mount(AiConversationSearch, { global: { stubs: globalStubs } })
 
-    await wrapper.find('[class*="filterToggle"]').trigger('click')
+    const popoverButton = wrapper.find('.el-popover button')
+
+    // Click to open
+    await popoverButton.trigger('click')
+    await wrapper.vm.$nextTick()
     expect(wrapper.find('[class*="filterPanel"]').exists()).toBe(true)
 
-    await wrapper.find('[class*="filterToggle"]').trigger('click')
+    // Click to close
+    await popoverButton.trigger('click')
+    await wrapper.vm.$nextTick()
     expect(wrapper.find('[class*="filterPanel"]').exists()).toBe(false)
   })
 
   it('renders source filter select with all options', async () => {
     const wrapper = mount(AiConversationSearch, { global: { stubs: globalStubs } })
 
-    await wrapper.find('[class*="filterToggle"]').trigger('click')
+    // Open filter panel
+    const popoverButton = wrapper.find('.el-popover button')
+    await popoverButton.trigger('click')
+    await wrapper.vm.$nextTick()
 
     const select = wrapper.find('select')
     expect(select.exists()).toBe(true)
@@ -250,7 +285,10 @@ describe('AiConversationSearch', () => {
   it('renders date range inputs', async () => {
     const wrapper = mount(AiConversationSearch, { global: { stubs: globalStubs } })
 
-    await wrapper.find('[class*="filterToggle"]').trigger('click')
+    // Open filter panel
+    const popoverButton = wrapper.find('.el-popover button')
+    await popoverButton.trigger('click')
+    await wrapper.vm.$nextTick()
 
     const dateInputs = wrapper.findAll('input[type="date"]')
     expect(dateInputs.length).toBe(2)
@@ -260,7 +298,10 @@ describe('AiConversationSearch', () => {
     vi.useFakeTimers()
     const wrapper = mount(AiConversationSearch, { global: { stubs: globalStubs } })
 
-    await wrapper.find('[class*="filterToggle"]').trigger('click')
+    // Open filter panel
+    const popoverButton = wrapper.find('.el-popover button')
+    await popoverButton.trigger('click')
+    await wrapper.vm.$nextTick()
 
     const select = wrapper.find('select')
     await select.setValue('editor')
@@ -275,7 +316,10 @@ describe('AiConversationSearch', () => {
     vi.useFakeTimers()
     const wrapper = mount(AiConversationSearch, { global: { stubs: globalStubs } })
 
-    await wrapper.find('[class*="filterToggle"]').trigger('click')
+    // Open filter panel
+    const popoverButton = wrapper.find('.el-popover button')
+    await popoverButton.trigger('click')
+    await wrapper.vm.$nextTick()
 
     const dateInputs = wrapper.findAll('input[type="date"]')
     await dateInputs[0].setValue('2026-06-01')
@@ -297,7 +341,10 @@ describe('AiConversationSearch', () => {
 
     await input.setValue('表单')
 
-    await wrapper.find('[class*="filterToggle"]').trigger('click')
+    // Open filter panel
+    const popoverButton = wrapper.find('.el-popover button')
+    await popoverButton.trigger('click')
+    await wrapper.vm.$nextTick()
 
     const select = wrapper.find('select')
     await select.setValue('flow')
@@ -320,7 +367,10 @@ describe('AiConversationSearch', () => {
     vi.useFakeTimers()
     const wrapper = mount(AiConversationSearch, { global: { stubs: globalStubs } })
 
-    await wrapper.find('[class*="filterToggle"]').trigger('click')
+    // Open filter panel
+    const popoverButton = wrapper.find('.el-popover button')
+    await popoverButton.trigger('click')
+    await wrapper.vm.$nextTick()
 
     const select = wrapper.find('select')
     await select.setValue('editor')
@@ -336,7 +386,10 @@ describe('AiConversationSearch', () => {
     vi.useFakeTimers()
     const wrapper = mount(AiConversationSearch, { global: { stubs: globalStubs } })
 
-    await wrapper.find('[class*="filterToggle"]').trigger('click')
+    // Open filter panel
+    const popoverButton = wrapper.find('.el-popover button')
+    await popoverButton.trigger('click')
+    await wrapper.vm.$nextTick()
 
     const select = wrapper.find('select')
     await select.setValue('editor')

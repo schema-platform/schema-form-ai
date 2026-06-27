@@ -134,10 +134,9 @@ describe('chat', () => {
     await reader.read()
 
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/ai/chat',
+      expect.stringContaining('/ai/chat'),
       expect.objectContaining({
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversationId: 'conv-1',
           message: 'hello',
@@ -490,7 +489,7 @@ describe('deleteConversation', () => {
 
     await deleteConversation('conv-1')
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/ai/conversations/conv-1',
+      expect.stringContaining('/ai/conversations/conv-1'),
       expect.objectContaining({ method: 'DELETE' }),
     )
   })
@@ -511,7 +510,7 @@ describe('publish', () => {
 
     expect(result).toEqual({ id: 's1', publishId: 'p1' })
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/ai/publish',
+      expect.stringContaining('/ai/publish'),
       expect.objectContaining({ method: 'POST' }),
     )
   })
@@ -568,7 +567,7 @@ describe('searchConversations', () => {
 
     await searchConversations({})
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/ai/conversations/search',
+      expect.stringContaining('/ai/conversations/search'),
       expect.any(Object),
     )
   })

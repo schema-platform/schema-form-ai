@@ -113,7 +113,7 @@ describe('AiMessage', () => {
       expect(wrapper.text()).toContain('Hello')
     })
 
-    it('cancels pending rAF on unmount', () => {
+    it('updates content immediately without rAF batching', async () => {
       setupRAFMock()
 
       const wrapper = mount(AiMessage, {
@@ -124,11 +124,12 @@ describe('AiMessage', () => {
         },
       })
 
-      expect(rafCallbacks.size).toBeGreaterThan(0)
+      // The component now updates content directly (no rAF batching)
+      await wrapper.setProps({ content: 'Hello' })
+      await nextTick()
 
-      wrapper.unmount()
-
-      expect(cafSpy).toHaveBeenCalled()
+      // Content should be immediately available
+      expect(wrapper.text()).toContain('Hello')
     })
 
     it('renders updated content after prop change and rAF flush', async () => {

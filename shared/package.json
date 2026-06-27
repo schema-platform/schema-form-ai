@@ -12,7 +12,7 @@
     "./systemKnowledge": "./dist/systemKnowledge.js"
   },
   "dependencies": {
-    "@schema-form/flow-shared": "workspace:*"
+    "@schema-form/flow-shared": "file:../../schema-form-flow-shared"
   },
   "devDependencies": {
     "typescript": "~5.7.3"

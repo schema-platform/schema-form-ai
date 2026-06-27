@@ -12,6 +12,7 @@
 
 import { ref, onMounted, computed } from 'vue'
 import { message, confirmDanger } from '@schema-form/platform-shared/utils/message'
+import { useDataLoading } from '@schema-platform/platform-shared/utils/useDataLoading'
 import {
   getRagStatus,
   reindexAllRag,
@@ -27,8 +28,8 @@ import type { RagSearchResult } from '@/types'
 
 // ---- State ----
 
-const loading = ref(false)
-const reindexing = ref(false)
+const { loading, withLoading: withStatusLoading } = useDataLoading({ timeout: 15000 })
+const { loading: reindexing, withLoading: withReindexLoading } = useDataLoading({ timeout: 30000 })
 const status = ref<RagStatusData | null>(null)
 const lastReindexResult = ref<RagReindexResult | null>(null)
 
@@ -119,29 +120,19 @@ const healthStatus = computed<'success' | 'warning' | 'danger'>(() => {
 // ---- Data Loading ----
 
 async function loadStatus(): Promise<void> {
-  loading.value = true
-  try {
+  await withStatusLoading(async () => {
     status.value = await getRagStatus()
-  } catch {
-    message.error('加载 RAG 状态失败')
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
 // ---- Reindex ----
 
 async function handleReindexAll(): Promise<void> {
-  reindexing.value = true
-  try {
+  await withReindexLoading(async () => {
     lastReindexResult.value = await reindexAllRag()
     message.success('批量重建索引完成')
     await loadStatus()
-  } catch {
-    message.error('批量重建索引失败')
-  } finally {
-    reindexing.value = false
-  }
+  })
 }
 
 async function handleReindexSingle(schemaId: string): Promise<void> {

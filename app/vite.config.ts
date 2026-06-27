@@ -1,15 +1,50 @@
-import { fileURLToPath } from 'node:url'
-import { createViteConfig, fixQiankunLifecyclePlugin } from '@schema-form/platform-shared/config/vite'
+import { defineConfig, type Plugin } from 'vite'
+import vue from '@vitejs/plugin-vue'
 import qiankun from 'vite-plugin-qiankun'
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const isProd = process.env.NODE_ENV === 'production'
+const rootDir = fileURLToPath(new URL('.', import.meta.url))
 
-export default createViteConfig('ai', import.meta.url, {
-  base: isProd ? '/schema-platform/micro/ai/' : '/',
+// 修复 vite-plugin-qiankun createDeffer 竞态问题
+function fixQiankunLifecyclePlugin(): Plugin {
+  return {
+    name: 'vite-plugin-fix-qiankun-lifecycle',
+    enforce: 'post',
+    transformIndexHtml(html) {
+      const brokenPattern = /const createDeffer = \(hookName\) => \{[\s\S]*?\}\s*\n\s*const bootstrap/
+      if (brokenPattern.test(html)) {
+        const fixedCreateDeffer = `const createDeffer = (hookName) => {
+        let resolveFn = null;
+        const d = new Promise((resolve) => { resolveFn = resolve; });
+        function tryBind() {
+          if (window.proxy) {
+            window.proxy['vite' + hookName] = resolveFn;
+          } else {
+            setTimeout(tryBind, 10);
+          }
+        }
+        tryBind();
+        return props => d.then(fn => fn(props));
+      }`
+        return html.replace(brokenPattern, fixedCreateDeffer + '\n  const bootstrap')
+      }
+      return html
+    },
+  }
+}
+
+export default defineConfig({
+  base: isProd ? '/schema-platform/child/ai/' : '/',
   plugins: [
+    vue(),
     qiankun('ai', { useDevMode: true }),
     fixQiankunLifecyclePlugin(),
   ],
+  resolve: {
+    alias: { '@': resolve(rootDir, 'src') },
+  },
   build: {
     rollupOptions: {
       input: {
@@ -20,5 +55,68 @@ export default createViteConfig('ai', import.meta.url, {
   },
   server: {
     port: 5300,
+    strictPort: true,
+    cors: true,
+    headers: { 'Access-Control-Allow-Origin': '*' },
+    proxy: {
+      '/schema-platform/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/schema-platform\/api/, '/api'),
+        selfHandleResponse: true,
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes, _, res) => {
+            const contentType = proxyRes.headers['content-type'] ?? ''
+            const isSSE = contentType.includes('text/event-stream')
+            const headers = { ...proxyRes.headers }
+            delete headers['content-encoding']
+            delete headers['transfer-encoding']
+            if (isSSE) {
+              headers['cache-control'] = 'no-cache'
+              headers['x-accel-buffering'] = 'no'
+            }
+            res.writeHead(proxyRes.statusCode ?? 200, headers)
+            if (isSSE) {
+              proxyRes.on('data', (chunk) => { res.write(chunk) })
+              proxyRes.on('end', () => res.end())
+              proxyRes.on('error', () => res.end())
+            } else {
+              proxyRes.pipe(res)
+            }
+          })
+        },
+      },
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        selfHandleResponse: true,
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes, _, res) => {
+            const contentType = proxyRes.headers['content-type'] ?? ''
+            const isSSE = contentType.includes('text/event-stream')
+            const headers = { ...proxyRes.headers }
+            delete headers['content-encoding']
+            delete headers['transfer-encoding']
+            if (isSSE) {
+              headers['cache-control'] = 'no-cache'
+              headers['x-accel-buffering'] = 'no'
+            }
+            res.writeHead(proxyRes.statusCode ?? 200, headers)
+            if (isSSE) {
+              proxyRes.on('data', (chunk) => { res.write(chunk) })
+              proxyRes.on('end', () => res.end())
+              proxyRes.on('error', () => res.end())
+            } else {
+              proxyRes.pipe(res)
+            }
+          })
+        },
+      },
+      '/ws': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        ws: true,
+      },
+    },
   },
 })

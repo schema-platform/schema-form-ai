@@ -81,7 +81,7 @@ describe('AiPreviewPanel', () => {
       })
 
       // Should render form items for each widget
-      const formItems = wrapper.findAll('.el-form-item')
+      const formItems = wrapper.findAll('.t-form-item')
       // input + select + textarea + button = 4
       expect(formItems.length).toBeGreaterThanOrEqual(3)
     })
@@ -121,7 +121,7 @@ describe('AiPreviewPanel', () => {
       })
 
       // Only the input widget should render as a form item (containers filtered out)
-      const formItems = wrapper.findAll('.el-form-item')
+      const formItems = wrapper.findAll('.t-form-item')
       expect(formItems).toHaveLength(1)
     })
 

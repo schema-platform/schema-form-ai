@@ -135,11 +135,7 @@ describe('AiChatSettings', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.emitted('update:settings')).toBeTruthy()
-    // The component now adds selectedModelId to the emitted settings
-    expect(wrapper.emitted('update:settings')![0][0]).toEqual({
-      ...defaultSettings,
-      selectedModelId: '',
-    })
+    expect(wrapper.emitted('update:settings')![0][0]).toEqual(defaultSettings)
     wrapper.unmount()
   })
 

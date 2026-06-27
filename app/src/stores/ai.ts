@@ -593,6 +593,7 @@ export const useAiStore = defineStore('ai', () => {
     streamStore.streamStatus = 'idle'
     streamStore.retryCount = 0
     streamStore.lastMessagePayload = null
+    streamStore.error = null
   }
 
   async function loadConversations(): Promise<void> {

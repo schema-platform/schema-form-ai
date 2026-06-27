@@ -77,7 +77,7 @@ describe('useAiStore', () => {
     it('appends user and assistant messages', async () => {
       const store = useAiStore()
       mockChatStream([
-        { type: 'text', content: '你好' },
+        { type: 'text_delta', content: '你好' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -93,7 +93,7 @@ describe('useAiStore', () => {
       const store = useAiStore()
       const schema = [{ id: '1', type: 'input', field: 'name' }]
       mockChatStream([
-        { type: 'schema', payload: schema, description: '表单已生成' },
+        { type: 'schema_complete', schema: schema, description: '表单已生成' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -108,7 +108,7 @@ describe('useAiStore', () => {
       const store = useAiStore()
       const flow = { nodes: [{ id: 'n1', type: 'start', label: '开始' }], edges: [] }
       mockChatStream([
-        { type: 'flow', payload: flow, description: '流程已生成' },
+        { type: 'flow_complete', flow: flow, description: '流程已生成' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -134,7 +134,7 @@ describe('useAiStore', () => {
     it('sets text content from text event', async () => {
       const store = useAiStore()
       mockChatStream([
-        { type: 'text', content: '你好' },
+        { type: 'text_delta', content: '你好' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -163,14 +163,14 @@ describe('useAiStore', () => {
     it('passes conversationId on subsequent messages', async () => {
       const store = useAiStore()
       mockChatStream([
-        { type: 'text', content: 'ok' },
+        { type: 'text_delta', content: 'ok' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
       await store.sendMessage('first')
 
       mockChatStream([
-        { type: 'text', content: 'sure' },
+        { type: 'text_delta', content: 'sure' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -369,7 +369,7 @@ describe('useAiStore', () => {
       })
 
       mockChatStream([
-        { type: 'text', content: 'ok' },
+        { type: 'text_delta', content: 'ok' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -403,7 +403,7 @@ describe('useAiStore', () => {
       })
 
       mockChatStream([
-        { type: 'text', content: 'ok' },
+        { type: 'text_delta', content: 'ok' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -461,7 +461,7 @@ describe('useAiStore', () => {
       })
 
       mockChatStream([
-        { type: 'text', content: 'ok' },
+        { type: 'text_delta', content: 'ok' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -513,7 +513,7 @@ describe('useAiStore', () => {
       vi.mocked(getConversations).mockResolvedValue(convos as any)
 
       mockChatStream([
-        { type: 'text', content: '回复内容' },
+        { type: 'text_delta', content: '回复内容' },
         { type: 'done', conversationId: 'conv-existing' },
       ])
 
@@ -529,7 +529,7 @@ describe('useAiStore', () => {
       useConversationStore().currentConversationId = 'conv-1'
 
       vi.mocked(emitChatSend).mockImplementation(() => {
-        pushChatEvent({ type: 'text', content: 'partial' })
+        pushChatEvent({ type: 'text_delta', content: 'partial' })
       })
 
       const promise = store.sendMessage('test')
@@ -544,7 +544,7 @@ describe('useAiStore', () => {
       expect(store.currentConversationId).toBeNull()
 
       mockChatStream([
-        { type: 'text', content: 'hi' },
+        { type: 'text_delta', content: 'hi' },
         { type: 'done', conversationId: 'conv-new' },
       ])
 
@@ -606,8 +606,8 @@ describe('useAiStore', () => {
     it('appends to existing tool calls', async () => {
       const store = useAiStore()
       mockChatStream([
-        { type: 'tool_call', phase: 'calling', tools: [{ id: '1', name: 'get_widgets', arguments: {} }] },
-        { type: 'tool_call', phase: 'result', tools: [{ id: '1', name: 'get_widgets', result: { data: [] } }] },
+        { type: 'tool_call_start', tools: [{ id: '1', name: 'get_widgets', arguments: {} }] },
+        { type: 'tool_call_end', tools: [{ id: '1', name: 'get_widgets', result: { data: [] } }] },
         { type: 'tool_error', content: '保存失败', toolName: 'save_widget' },
         { type: 'done', conversationId: 'conv-1' },
       ])
@@ -625,7 +625,7 @@ describe('useAiStore', () => {
     it('matches tool_error by runId to existing calling entry', async () => {
       const store = useAiStore()
       mockChatStream([
-        { type: 'tool_call', phase: 'calling', tools: [{ id: 'run-abc', name: 'generate_schema', arguments: { prompt: 'test' } }] },
+        { type: 'tool_call_start', tools: [{ id: 'run-abc', name: 'generate_schema', arguments: { prompt: 'test' } }] },
         { type: 'tool_error', toolName: 'generate_schema', runId: 'run-abc', content: 'Schema 校验失败' },
         { type: 'done', conversationId: 'conv-1' },
       ])
@@ -646,8 +646,8 @@ describe('useAiStore', () => {
     it('creates new entry when tool_error matches name but existing entry already has result (no runId)', async () => {
       const store = useAiStore()
       mockChatStream([
-        { type: 'tool_call', phase: 'calling', tools: [{ id: '1', name: 'search_schemas', arguments: {} }] },
-        { type: 'tool_call', phase: 'result', tools: [{ id: '1', name: 'search_schemas', result: { data: [] } }] },
+        { type: 'tool_call_start', tools: [{ id: '1', name: 'search_schemas', arguments: {} }] },
+        { type: 'tool_call_end', tools: [{ id: '1', name: 'search_schemas', result: { data: [] } }] },
         { type: 'tool_error', content: '后续操作失败', toolName: 'search_schemas' },
         { type: 'done', conversationId: 'conv-1' },
       ])
@@ -666,8 +666,8 @@ describe('useAiStore', () => {
     it('overwrites existing result when tool_error has matching runId', async () => {
       const store = useAiStore()
       mockChatStream([
-        { type: 'tool_call', phase: 'calling', tools: [{ id: 'run-xyz', name: 'update_schema', arguments: {} }] },
-        { type: 'tool_call', phase: 'result', tools: [{ id: 'run-xyz', name: 'update_schema', result: { success: true } }] },
+        { type: 'tool_call_start', tools: [{ id: 'run-xyz', name: 'update_schema', arguments: {} }] },
+        { type: 'tool_call_end', tools: [{ id: 'run-xyz', name: 'update_schema', result: { success: true } }] },
         { type: 'tool_error', toolName: 'update_schema', runId: 'run-xyz', content: '写入失败' },
         { type: 'done', conversationId: 'conv-1' },
       ])
@@ -686,9 +686,9 @@ describe('useAiStore', () => {
     it('tool_error does not block subsequent text events', async () => {
       const store = useAiStore()
       mockChatStream([
-        { type: 'tool_call', phase: 'calling', tools: [{ id: 'r1', name: 'save_and_bind_schema', arguments: {} }] },
+        { type: 'tool_call_start', tools: [{ id: 'r1', name: 'save_and_bind_schema', arguments: {} }] },
         { type: 'tool_error', toolName: 'save_and_bind_schema', runId: 'r1', content: '数据库超时' },
-        { type: 'text', content: '工具调用失败了，让我换个方式试试。' },
+        { type: 'text_delta', content: '工具调用失败了，让我换个方式试试。' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -720,7 +720,7 @@ describe('useAiStore', () => {
 
       // Retry: tool succeeds
       mockChatStream([
-        { type: 'text', content: '已保存' },
+        { type: 'text_delta', content: '已保存' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -756,8 +756,8 @@ describe('useAiStore', () => {
     it('does nothing when tool call has no error', async () => {
       const store = useAiStore()
       mockChatStream([
-        { type: 'tool_call', phase: 'calling', tools: [{ id: '1', name: 'get_widgets', arguments: {} }] },
-        { type: 'tool_call', phase: 'result', tools: [{ id: '1', name: 'get_widgets', result: { data: [] } }] },
+        { type: 'tool_call_start', tools: [{ id: '1', name: 'get_widgets', arguments: {} }] },
+        { type: 'tool_call_end', tools: [{ id: '1', name: 'get_widgets', result: { data: [] } }] },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -771,7 +771,7 @@ describe('useAiStore', () => {
     it('does nothing when message is not assistant', async () => {
       const store = useAiStore()
       mockChatStream([
-        { type: 'text', content: 'ok' },
+        { type: 'text_delta', content: 'ok' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
@@ -792,7 +792,7 @@ describe('useAiStore', () => {
       await store.sendMessage('生成注册表单')
 
       mockChatStream([
-        { type: 'text', content: 'ok' },
+        { type: 'text_delta', content: 'ok' },
         { type: 'done', conversationId: 'conv-1' },
       ])
 
