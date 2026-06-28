@@ -2,12 +2,10 @@
 /**
  * RAG 知识库管理页面
  *
- * 功能：
- * - 展示索引状态总览（已索引/未索引/过期）
- * - 已索引 Schema 列表
- * - 手动触发单个/批量重建索引
- * - 批量选择、批量索引、批量删除
- * - 语义搜索测试
+ * 简洁设计：
+ * - 顶部状态概览
+ * - 搜索测试区域
+ * - 索引管理列表
  */
 
 import { ref, onMounted, computed } from 'vue'
@@ -25,6 +23,7 @@ import type {
   RagReindexResult,
 } from '@/api/aiApi'
 import type { RagSearchResult } from '@/types'
+import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
 // ---- State ----
 
@@ -193,8 +192,10 @@ onMounted(() => {
     <div :class="$style.topbar">
       <div :class="$style.topbarLeft">
         <div :class="$style.topbarLogo">
-          <div :class="$style.topbarIcon">KB</div>
-          <span :class="$style.topbarBrand">RAG 知识库管理</span>
+          <div :class="$style.topbarIcon">
+            <AppIcon name="notebook" :size="18" />
+          </div>
+          <span :class="$style.topbarBrand">RAG 知识库</span>
         </div>
       </div>
       <div :class="$style.topbarRight">
@@ -204,59 +205,137 @@ onMounted(() => {
           :loading="reindexing"
           @click="handleReindexAll"
         >
-          {{ reindexing ? '索引中...' : '批量重建索引' }}
+          <AppIcon name="refresh" :size="14" />
+          {{ reindexing ? '索引中...' : '重建索引' }}
         </el-button>
         <el-button
           size="small"
           :loading="loading"
           @click="loadStatus"
         >
-          刷新状态
+          <AppIcon name="refresh" :size="14" />
+          刷新
         </el-button>
       </div>
     </div>
 
     <!-- Body -->
     <div :class="$style.body">
-      <!-- Summary cards -->
-      <div :class="$style.summaryGrid">
-        <div :class="$style.summaryCard">
-          <div :class="$style.summaryLabel">Schema 总数</div>
-          <div :class="$style.summaryValue">{{ status?.totalSchemas ?? '-' }}</div>
+      <!-- 状态概览 -->
+      <div :class="$style.statusOverview">
+        <div :class="$style.statusCard">
+          <div :class="$style.statusIcon">
+            <AppIcon name="document" :size="20" />
+          </div>
+          <div :class="$style.statusInfo">
+            <div :class="$style.statusValue">{{ status?.totalSchemas ?? 0 }}</div>
+            <div :class="$style.statusLabel">Schema 总数</div>
+          </div>
         </div>
-        <div :class="$style.summaryCard">
-          <div :class="$style.summaryLabel">已索引</div>
-          <div :class="[$style.summaryValue, $style.success]">{{ status?.indexed ?? '-' }}</div>
+        <div :class="$style.statusCard">
+          <div :class="[$style.statusIcon, $style.statusIconSuccess]">
+            <AppIcon name="check" :size="20" />
+          </div>
+          <div :class="$style.statusInfo">
+            <div :class="$style.statusValue">{{ status?.indexed ?? 0 }}</div>
+            <div :class="$style.statusLabel">已索引</div>
+          </div>
         </div>
-        <div :class="$style.summaryCard">
-          <div :class="$style.summaryLabel">未索引</div>
-          <div :class="[$style.summaryValue, status?.unindexed ? $style.warning : '']">{{ status?.unindexed ?? '-' }}</div>
+        <div :class="$style.statusCard">
+          <div :class="[$style.statusIcon, $style.statusIconWarning]">
+            <AppIcon name="warning" :size="20" />
+          </div>
+          <div :class="$style.statusInfo">
+            <div :class="$style.statusValue">{{ status?.unindexed ?? 0 }}</div>
+            <div :class="$style.statusLabel">待索引</div>
+          </div>
         </div>
-        <div :class="$style.summaryCard">
-          <div :class="$style.summaryLabel">过期索引</div>
-          <div :class="[$style.summaryValue, status?.stale ? $style.danger : '']">{{ status?.stale ?? '-' }}</div>
-        </div>
-        <div :class="$style.summaryCard">
-          <div :class="$style.summaryLabel">索引覆盖率</div>
-          <div :class="[$style.summaryValue, $style[healthStatus]]">{{ healthPercent }}%</div>
+        <div :class="$style.statusCard">
+          <div :class="[$style.statusIcon, $style[`statusIcon${healthStatus.charAt(0).toUpperCase() + healthStatus.slice(1)}`]]">
+            <AppIcon name="chart-bar" :size="20" />
+          </div>
+          <div :class="$style.statusInfo">
+            <div :class="$style.statusValue">{{ healthPercent }}%</div>
+            <div :class="$style.statusLabel">覆盖率</div>
+          </div>
         </div>
       </div>
 
-      <!-- Reindex result -->
-      <div v-if="lastReindexResult" :class="$style.reindexResult">
-        <strong>上次批量索引结果：</strong>
-        总计 {{ lastReindexResult.total }} 个 Schema，
-        新建 {{ lastReindexResult.created }}，
-        更新 {{ lastReindexResult.updated }}，
-        跳过 {{ lastReindexResult.skipped }}，
-        失败 {{ lastReindexResult.errors }}
+      <!-- 搜索测试 -->
+      <div :class="$style.searchSection">
+        <div :class="$style.searchHeader">
+          <h3 :class="$style.sectionTitle">语义搜索测试</h3>
+          <p :class="$style.sectionDesc">输入自然语言描述，测试 RAG 语义搜索效果</p>
+        </div>
+        <div :class="$style.searchBox">
+          <el-input
+            v-model="searchQuery"
+            :class="$style.searchInput"
+            placeholder="例如：用户注册表单、请假审批流程..."
+            clearable
+            @keyup.enter="handleSearch"
+          >
+            <template #prefix>
+              <AppIcon name="search" :size="16" />
+            </template>
+          </el-input>
+          <el-button
+            type="primary"
+            :loading="searchLoading"
+            @click="handleSearch"
+          >
+            搜索
+          </el-button>
+        </div>
+
+        <!-- 搜索结果 -->
+        <div v-if="searchPerformed" :class="$style.searchResults">
+          <div v-if="searchResults.length === 0 && !searchLoading" :class="$style.emptyState">
+            <AppIcon name="search" :size="32" />
+            <p>未找到匹配的 Schema</p>
+          </div>
+          <div v-else :class="$style.resultList">
+            <div
+              v-for="item in searchResults"
+              :key="item.id"
+              :class="$style.resultItem"
+            >
+              <div :class="[$style.resultScore, $style[getScoreClass(item.score)]]">
+                {{ item.score }}
+              </div>
+              <div :class="$style.resultContent">
+                <div :class="$style.resultName">{{ item.name }}</div>
+                <div v-if="item.description" :class="$style.resultDesc">
+                  {{ item.description }}
+                </div>
+                <div :class="$style.resultMeta">
+                  <el-tag size="small" :type="item.type === 'form' ? 'primary' : 'success'">
+                    {{ getSchemaTypeLabel(item.type) }}
+                  </el-tag>
+                  <span :class="$style.resultWidgets">
+                    {{ item.widgetTypes.slice(0, 3).join(', ') }}
+                    {{ item.widgetTypes.length > 3 ? `+${item.widgetTypes.length - 3}` : '' }}
+                  </span>
+                </div>
+              </div>
+              <el-button
+                type="primary"
+                link
+                size="small"
+                @click="handleReindexSingle(item.id)"
+              >
+                重建索引
+              </el-button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Unindexed schemas -->
-      <div :class="$style.section">
-        <div :class="$style.sectionHeader">
-          <h3 :class="$style.sectionTitle">未索引 Schema</h3>
-          <div :class="$style.bulkActions">
+      <!-- 索引管理 -->
+      <div :class="$style.manageSection">
+        <div :class="$style.manageHeader">
+          <h3 :class="$style.sectionTitle">索引管理</h3>
+          <div :class="$style.manageActions">
             <el-button
               size="small"
               :type="bulkMode ? 'danger' : 'default'"
@@ -281,17 +360,31 @@ onMounted(() => {
                 :loading="bulkProcessing"
                 @click="handleBulkDeleteEmbedding"
               >
-                批量删除索引 ({{ selectedIds.size }})
+                批量删除 ({{ selectedIds.size }})
               </el-button>
             </template>
           </div>
         </div>
+
+        <!-- 上次索引结果 -->
+        <div v-if="lastReindexResult" :class="$style.reindexResult">
+          <AppIcon name="info-filled" :size="16" />
+          <span>
+            上次批量索引：总计 {{ lastReindexResult.total }}，
+            新建 {{ lastReindexResult.created }}，
+            更新 {{ lastReindexResult.updated }}，
+            跳过 {{ lastReindexResult.skipped }}，
+            失败 {{ lastReindexResult.errors }}
+          </span>
+        </div>
+
+        <!-- Schema 列表 -->
         <el-table
           :data="status?.unindexedSchemas ?? []"
           :class="$style.table"
           stripe
           size="small"
-          empty-text="所有 Schema 均已索引"
+          empty-text="所有 Schema 均已索引 ✓"
         >
           <el-table-column v-if="bulkMode" label="" width="48">
             <template #default="{ row }">
@@ -309,7 +402,7 @@ onMounted(() => {
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="160" fixed="right">
+          <el-table-column label="操作" width="120" fixed="right">
             <template #default="{ row }">
               <el-button
                 type="primary"
@@ -317,72 +410,12 @@ onMounted(() => {
                 size="small"
                 @click="handleReindexSingle(row.id)"
               >
+                <AppIcon name="refresh" :size="12" />
                 建立索引
               </el-button>
             </template>
           </el-table-column>
         </el-table>
-      </div>
-
-      <!-- Search test -->
-      <div :class="$style.section">
-        <div :class="$style.sectionHeader">
-          <h3 :class="$style.sectionTitle">语义搜索测试</h3>
-        </div>
-        <div :class="$style.searchArea">
-          <el-input
-            v-model="searchQuery"
-            :class="$style.searchInput"
-            placeholder="输入自然语言描述，如：用户注册表单"
-            clearable
-            @keyup.enter="handleSearch"
-          />
-          <el-button
-            type="primary"
-            :loading="searchLoading"
-            @click="handleSearch"
-          >
-            搜索
-          </el-button>
-        </div>
-
-        <div :class="$style.searchResults">
-          <template v-if="searchResults.length > 0">
-            <div
-              v-for="item in searchResults"
-              :key="item.id"
-              :class="$style.searchResultItem"
-            >
-              <div :class="[$style.resultScore, $style[getScoreClass(item.score)]]">
-                {{ item.score }}
-              </div>
-              <div :class="$style.resultInfo">
-                <div :class="$style.resultName">{{ item.name }}</div>
-                <div v-if="item.description" :class="$style.resultDesc">
-                  {{ item.description }}
-                </div>
-                <div :class="$style.resultTags">
-                  <span
-                    v-for="wt in item.widgetTypes.slice(0, 5)"
-                    :key="wt"
-                    :class="$style.resultTag"
-                  >
-                    {{ wt }}
-                  </span>
-                  <span v-if="item.widgetTypes.length > 5" :class="$style.resultTag">
-                    +{{ item.widgetTypes.length - 5 }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </template>
-          <div v-else-if="searchPerformed && !searchLoading" :class="$style.emptyHint">
-            未找到匹配的 Schema
-          </div>
-          <div v-else-if="!searchPerformed" :class="$style.emptyHint">
-            输入自然语言描述，测试 RAG 语义搜索效果
-          </div>
-        </div>
       </div>
     </div>
   </div>

@@ -207,7 +207,8 @@ export function chat(request: ChatRequest, signal?: AbortSignal): ReadableStream
 // ---- 对话管理 ----
 
 export async function getConversations(): Promise<Conversation[]> {
-  return request<Conversation[]>('/ai/conversations')
+  const response = await request<{ items: Conversation[]; total: number; page: number; pageSize: number; totalPages: number }>('/ai/conversations')
+  return response.items
 }
 
 export async function getConversationDetail(id: string): Promise<Conversation & { messages: Array<{ role: string; content: string; thinking?: string; tip?: string; schema?: unknown[]; flow?: unknown; timestamp: string }> }> {

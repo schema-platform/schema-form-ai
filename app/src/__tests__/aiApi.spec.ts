@@ -461,7 +461,7 @@ describe('getConversations', () => {
   it('returns data from response', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ success: true, data: [{ id: '1', title: 'test' }] }),
+      json: () => Promise.resolve({ success: true, data: { items: [{ id: '1', title: 'test' }], total: 1, page: 1, pageSize: 20, totalPages: 1 } }),
     })
 
     const result = await getConversations()

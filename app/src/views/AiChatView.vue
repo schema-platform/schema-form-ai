@@ -6,23 +6,51 @@
  * 简洁设计，专注于对话体验。
  */
 
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useAiStore } from '@/stores/ai'
 import { bridge } from '@/utils/bridge'
 import type { AgentType, ChatSettings, MentionReference, RagSearchResult } from '@/types'
 import { storeToRefs } from 'pinia'
 import { message } from '@schema-platform/platform-shared/utils/message'
-import { HomeFilled } from '@element-plus/icons-vue'
+import { HomeFilled, Plus, Clock } from '@element-plus/icons-vue'
 import { getAppUrl } from '@schema-platform/platform-shared/qiankun/config'
+import { connect as connectSocket, isConnected } from '@schema-platform/platform-shared/socket'
 import AiChatPanel from '@/components/AiChatPanel.vue'
 import AiChatSettings from '@/components/AiChatSettings.vue'
+import ConversationDrawer from '@/components/ConversationDrawer.vue'
 
 const store = useAiStore()
 const { messages, loading, currentSchema, currentFlow, activeAgent, conversations, currentConversationId, taskChain, taskChainIndex, streamStatus, retryCount, MAX_AUTO_RETRIES, chatSettings, ragSearchResults, ragSearching, ragContext } =
   storeToRefs(store)
 
+// ---- WebSocket 连接状态 ----
+const wsConnected = ref(isConnected())
+let statusTimer: ReturnType<typeof setInterval> | null = null
+
+function startStatusCheck(): void {
+  statusTimer = setInterval(() => {
+    wsConnected.value = isConnected()
+  }, 1000)
+}
+
 // ---- 防止发布按钮重复调用 ----
 const isPublishing = ref(false)
+
+// ---- 对话历史抽屉 ----
+const conversationDrawerVisible = ref(false)
+
+function handleOpenConversationDrawer(): void {
+  conversationDrawerVisible.value = true
+}
+
+function handleSelectConversation(id: string): void {
+  store.loadConversation(id)
+  conversationDrawerVisible.value = false
+}
+
+function handleDeleteConversation(id: string): void {
+  store.removeConversation(id)
+}
 
 // ---- Settings dialog ----
 const settingsVisible = ref(false)
@@ -39,27 +67,18 @@ function handleSaveSettings(settings: ChatSettings): void {
   store.updateChatSettings(settings)
 }
 
-// ---- JSON Drawer ----
-const jsonDrawerVisible = ref(false)
-
-function handleOpenJsonDrawer(): void {
-  jsonDrawerVisible.value = true
-}
-
-const jsonDrawerContent = computed(() => {
-  if (currentSchema.value) {
-    return JSON.stringify(currentSchema.value, null, 2)
+// ---- 新对话按钮文案 ----
+const newConversationLabel = computed(() => {
+  if (!currentConversationId.value) {
+    return '新对话'
   }
-  if (currentFlow.value) {
-    return JSON.stringify(currentFlow.value, null, 2)
+  const currentConv = conversations.value.find(c => c.id === currentConversationId.value)
+  if (!currentConv || !currentConv.title || currentConv.title === '新对话') {
+    return '新对话'
   }
-  return '{}'
-})
-
-const jsonDrawerTitle = computed(() => {
-  if (currentSchema.value) return 'Schema JSON 结构'
-  if (currentFlow.value) return 'Flow JSON 结构'
-  return 'JSON 结构'
+  // 截断标题
+  const title = currentConv.title
+  return title.length > 8 ? title.slice(0, 8) + '...' : title
 })
 
 // ---- Event handlers ----
@@ -188,6 +207,8 @@ function handleMessageFeedback(messageIndex: number, type: 'positive' | 'negativ
 
 onMounted(() => {
   store.loadConversations()
+  connectSocket({ path: import.meta.env.PROD ? '/schema-platform/ws' : '/ws' })
+  startStatusCheck()
 
   bridge.on('ai:set-context', (payload) => {
     store.setContext(payload)
@@ -196,6 +217,13 @@ onMounted(() => {
   bridge.on('ai:current-schema', (payload) => {
     store.setCurrentSchema(payload)
   })
+})
+
+onUnmounted(() => {
+  if (statusTimer) {
+    clearInterval(statusTimer)
+    statusTimer = null
+  }
 })
 </script>
 
@@ -216,12 +244,22 @@ onMounted(() => {
         </div>
       </div>
       <div :class="$style.topbarRight">
+        <div :class="[$style.wsStatus, wsConnected ? $style.wsConnected : $style.wsDisconnected]">
+          <span :class="$style.wsDot" />
+          <span>{{ wsConnected ? '已连接' : '未连接' }}</span>
+        </div>
         <div :class="$style.modelBadge">
           <span :class="$style.modelDot"></span>
           <span :class="$style.modelName">DeepSeek</span>
         </div>
+        <el-tooltip content="对话历史" placement="bottom">
+          <el-button :class="$style.iconBtn" @click="handleOpenConversationDrawer">
+            <el-icon :size="16"><Clock /></el-icon>
+          </el-button>
+        </el-tooltip>
         <el-button type="primary" size="small" @click="handleNewConversation">
-          + 新对话
+          <el-icon :size="14"><Plus /></el-icon>
+          {{ newConversationLabel }}
         </el-button>
       </div>
     </div>
@@ -251,13 +289,22 @@ onMounted(() => {
         @rag-search="handleRagSearch"
         @rag-select="handleRagSelect"
         @rag-remove="handleRagRemove"
-        @open-json-drawer="handleOpenJsonDrawer"
         @retry-tool="(mi, tci) => store.retryToolCall(mi, tci)"
         @copy-message="handleCopyMessage"
         @regenerate-message="handleRegenerateMessage"
         @message-feedback="handleMessageFeedback"
       />
     </div>
+
+    <!-- 对话历史抽屉 -->
+    <ConversationDrawer
+      v-model:visible="conversationDrawerVisible"
+      :conversations="conversations"
+      :active-id="currentConversationId ?? undefined"
+      @select="handleSelectConversation"
+      @delete="handleDeleteConversation"
+      @new-conversation="handleNewConversation"
+    />
 
     <!-- Settings Dialog -->
     <AiChatSettings
@@ -266,19 +313,6 @@ onMounted(() => {
       @update:visible="handleUpdateSettingsVisible"
       @update:settings="handleSaveSettings"
     />
-
-    <!-- JSON 结构抽屉 -->
-    <t-drawer
-      v-model:visible="jsonDrawerVisible"
-      :title="jsonDrawerTitle"
-      placement="right"
-      size="420px"
-      :z-index="2000"
-    >
-      <div :class="$style.jsonDrawer">
-        <pre :class="$style.jsonContent">{{ jsonDrawerContent }}</pre>
-      </div>
-    </t-drawer>
   </div>
 </template>
 

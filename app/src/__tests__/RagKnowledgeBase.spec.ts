@@ -89,9 +89,9 @@ describe('RagKnowledgeBase', () => {
 
     expect(wrapper.text()).toContain('Schema 总数')
     expect(wrapper.text()).toContain('已索引')
-    expect(wrapper.text()).toContain('未索引')
-    expect(wrapper.text()).toContain('过期索引')
-    expect(wrapper.text()).toContain('索引覆盖率')
+    expect(wrapper.text()).toContain('待索引')
+    expect(wrapper.text()).toContain('覆盖率')
+    expect(wrapper.text()).toContain('覆盖率')
   })
 
   it('triggers batch reindex when button is clicked', async () => {
@@ -102,7 +102,7 @@ describe('RagKnowledgeBase', () => {
     const wrapper = mountComponent()
     await flushPromises()
 
-    const reindexBtn = wrapper.findAll('button').find((b) => b.text().includes('批量重建索引'))
+    const reindexBtn = wrapper.findAll('button').find((b) => b.text().includes('重建索引'))
     await reindexBtn!.trigger('click')
     await flushPromises()
 
@@ -118,11 +118,11 @@ describe('RagKnowledgeBase', () => {
     const wrapper = mountComponent()
     await flushPromises()
 
-    const reindexBtn = wrapper.findAll('button').find((b) => b.text().includes('批量重建索引'))
+    const reindexBtn = wrapper.findAll('button').find((b) => b.text().includes('重建索引'))
     await reindexBtn!.trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('上次批量索引结果')
+    expect(wrapper.text()).toContain('上次批量索引')
     expect(wrapper.text()).toContain('新建 3')
     expect(wrapper.text()).toContain('更新 2')
     expect(wrapper.text()).toContain('跳过 4')
@@ -199,7 +199,7 @@ describe('RagKnowledgeBase', () => {
     await searchBtn!.trigger('click')
     await flushPromises()
 
-    expect(wrapper.text()).toContain('+1')
+    expect(wrapper.text()).toContain('+3')
   })
 
   it('handles search via Enter key', async () => {
@@ -255,7 +255,7 @@ describe('RagKnowledgeBase', () => {
 
     expect(mockGetRagStatus).toHaveBeenCalledTimes(1)
 
-    const refreshBtn = wrapper.findAll('button').find((b) => b.text().includes('刷新状态'))
+    const refreshBtn = wrapper.findAll('button').find((b) => b.text().includes('刷新'))
     await refreshBtn!.trigger('click')
     await flushPromises()
 
@@ -265,7 +265,7 @@ describe('RagKnowledgeBase', () => {
   it('renders topbar with correct title', async () => {
     const wrapper = mountComponent()
     await flushPromises()
-    expect(wrapper.text()).toContain('RAG 知识库管理')
+    expect(wrapper.text()).toContain('RAG 知识库')
   })
 
   it('renders search input with correct placeholder', async () => {

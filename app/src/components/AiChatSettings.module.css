@@ -1,157 +1,53 @@
-/* Overlay */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: 2000;
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* Drawer */
-.drawer {
-  width: 360px;
-  height: 100%;
-  background: var(--ai-bg-white, #FFFFFF);
-  display: flex;
-  flex-direction: column;
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.08);
-}
-
 /* Header */
 .header {
-  height: 52px;
-  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--ai-border-light, #EBEDF3);
-  flex-shrink: 0;
+  width: 100%;
 }
 
 .title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--ai-text-primary, #333333);
-}
-
-.closeBtn {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--ai-radius-md, 4px);
-  border: none;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--ai-text-hint, #999999);
-  transition: all 0.15s;
-}
-
-.closeBtn:hover {
-  background: var(--ai-bg-gray, #F5F7FA);
   color: var(--ai-text-primary, #333333);
 }
 
 /* Body */
 .body {
-  flex: 1;
+  height: 100%;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 24px;
 }
 
-/* Card */
-.card {
+/* Section */
+.section {
+  background: var(--ai-bg-white, #FFFFFF);
+  border-radius: 10px;
   border: 1px solid var(--ai-border-light, #EBEDF3);
-  border-radius: 6px;
-  overflow: hidden;
+  padding: 18px 20px;
 }
 
-.cardTitle {
-  padding: 10px 14px;
-  font-size: 13px;
+.sectionTitle {
+  font-size: 14px;
   font-weight: 600;
   color: var(--ai-text-primary, #333333);
+  margin: 0 0 16px;
+}
+
+/* Status card */
+.statusCard {
   background: var(--ai-bg-gray, #F5F7FA);
-  border-bottom: 1px solid var(--ai-border-light, #EBEDF3);
+  border-radius: 8px;
+  padding: 14px 16px;
 }
 
-.cardBody {
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Form item */
-.formItem {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ai-text-secondary, #666666);
-}
-
-.radioGroup {
-  width: 100%;
-}
-
-/* Footer */
-.footer {
-  padding: 12px 16px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  border-top: 1px solid var(--ai-border-light, #EBEDF3);
-  flex-shrink: 0;
-}
-
-.cancelBtn {
-  padding: 8px 16px;
-  border-radius: var(--ai-radius-md, 4px);
-  border: 1px solid var(--ai-border-base, #D5DDE3);
-  background: var(--ai-bg-white, #FFFFFF);
-  color: var(--ai-text-secondary, #666666);
-  font-size: 13px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.cancelBtn:hover {
-  border-color: var(--ai-color-primary, #0060A2);
-  color: var(--ai-color-primary, #0060A2);
-}
-
-.saveBtn {
-  padding: 8px 16px;
-  border-radius: var(--ai-radius-md, 4px);
-  border: none;
-  background: var(--ai-color-primary, #0060A2);
-  color: #FFFFFF;
-  font-size: 13px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.saveBtn:hover {
-  background: #035B9C;
-}
-
-/* Connection status */
 .statusRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .statusDot {
@@ -162,18 +58,18 @@
 }
 
 .statusOk {
-  background: #22c55e;
-  box-shadow: 0 0 4px rgba(34, 197, 94, 0.4);
+  background: var(--ai-color-success, #00e676);
+  box-shadow: 0 0 6px rgba(0, 230, 118, 0.4);
 }
 
 .statusError {
-  background: #ef4444;
-  box-shadow: 0 0 4px rgba(239, 68, 68, 0.4);
+  background: var(--ai-color-danger, #ff5252);
+  box-shadow: 0 0 6px rgba(255, 82, 82, 0.4);
 }
 
 .statusChecking {
-  background: #f59e0b;
-  animation: pulse 1s ease-in-out infinite;
+  background: var(--ai-color-warning, #ffab40);
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 .statusText {
@@ -187,82 +83,74 @@
 }
 
 .providerList {
-  margin-top: 8px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .providerItem {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
-  background: var(--ai-bg-gray, #F5F7FA);
-  border-radius: var(--ai-radius-md, 4px);
+  padding: 8px 12px;
+  background: var(--ai-bg-white, #FFFFFF);
+  border-radius: 6px;
+  border: 1px solid var(--ai-border-light, #EBEDF3);
 }
 
 .providerName {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--ai-text-primary, #333333);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .defaultBadge {
   font-size: 10px;
-  padding: 1px 5px;
-  border-radius: 3px;
-  background: var(--ai-color-primary, #0060A2);
-  color: #FFFFFF;
-  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--ai-color-primary-bg, rgba(0, 212, 255, 0.1));
+  color: var(--ai-color-primary, #00d4ff);
+  font-weight: 600;
 }
 
 .providerModel {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ai-text-hint, #999999);
 }
 
-/* Model option */
-.modelOption {
+/* Form group */
+.formGroup {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 2px 0;
+  gap: 16px;
 }
 
-.modelOptionName {
+.formItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
   font-size: 13px;
-  color: var(--ai-text-primary, #333333);
+  font-weight: 500;
+  color: var(--ai-text-secondary, #666666);
 }
 
-.modelOptionMeta {
-  font-size: 11px;
-  color: var(--ai-text-hint, #999999);
+.select {
+  width: 100%;
+}
+
+/* Footer */
+.footer {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-/* Transition */
-:global(.drawer-enter-active),
-:global(.drawer-leave-active) {
-  transition: opacity 0.2s;
-}
-
-:global(.drawer-enter-active) .drawer,
-:global(.drawer-leave-active) .drawer {
-  transition: transform 0.2s;
-}
-
-:global(.drawer-enter-from),
-:global(.drawer-leave-to) {
-  opacity: 0;
-}
-
-:global(.drawer-enter-from) .drawer,
-:global(.drawer-leave-to) .drawer {
-  transform: translateX(100%);
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--ai-border-light, #EBEDF3);
 }

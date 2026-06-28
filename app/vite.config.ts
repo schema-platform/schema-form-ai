@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import qiankun from 'vite-plugin-qiankun'
 import { resolve } from 'node:path'
@@ -7,40 +7,11 @@ import { fileURLToPath } from 'node:url'
 const isProd = process.env.NODE_ENV === 'production'
 const rootDir = fileURLToPath(new URL('.', import.meta.url))
 
-// 修复 vite-plugin-qiankun createDeffer 竞态问题
-function fixQiankunLifecyclePlugin(): Plugin {
-  return {
-    name: 'vite-plugin-fix-qiankun-lifecycle',
-    enforce: 'post',
-    transformIndexHtml(html) {
-      const brokenPattern = /const createDeffer = \(hookName\) => \{[\s\S]*?\}\s*\n\s*const bootstrap/
-      if (brokenPattern.test(html)) {
-        const fixedCreateDeffer = `const createDeffer = (hookName) => {
-        let resolveFn = null;
-        const d = new Promise((resolve) => { resolveFn = resolve; });
-        function tryBind() {
-          if (window.proxy) {
-            window.proxy['vite' + hookName] = resolveFn;
-          } else {
-            setTimeout(tryBind, 10);
-          }
-        }
-        tryBind();
-        return props => d.then(fn => fn(props));
-      }`
-        return html.replace(brokenPattern, fixedCreateDeffer + '\n  const bootstrap')
-      }
-      return html
-    },
-  }
-}
-
 export default defineConfig({
   base: isProd ? '/schema-platform/child/ai/' : '/',
   plugins: [
     vue(),
     qiankun('ai', { useDevMode: true }),
-    fixQiankunLifecyclePlugin(),
   ],
   css: {
     preprocessorOptions: {
