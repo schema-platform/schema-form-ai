@@ -1,6 +1,6 @@
 # 事件协议
 
-> AI 流式通信的事件类型和数据格式
+> AI 流式通信的事件类型和数据格式（基于 WebSocket / Socket.IO）
 
 ## 一、事件概述
 
@@ -9,15 +9,15 @@
 ```
 Server                              Client
    │                                   │
-   │──── chat:event ──────────────────►│
+   │──── chat:event ──────────────────►│  (WebSocket)
    │     { type, content, ... }        │
    │                                   │
-   │◄─── chat:send ───────────────────│
+   │◄─── chat:send ───────────────────│  (WebSocket)
    │     { message, context }          │
    │                                   │
-   │◄─── chat:cancel ─────────────────│
+   │◄─── chat:cancel ─────────────────│  (WebSocket)
    │                                   │
-   │◄─── chat:resume ─────────────────│
+   │◄─── chat:resume ─────────────────│  (WebSocket)
    │     { threadId, confirmed }       │
 ```
 
@@ -698,7 +698,7 @@ sendEvent({
 ```typescript
 // stream.ts
 unsubscribeChatEvent = onChatEvent((chatEvent) => {
-  const event = chatEvent as SSEEvent
+  const event = chatEvent as StreamEvent
 
   if (event.type === 'done') {
     doneResolve?.()
@@ -708,7 +708,7 @@ unsubscribeChatEvent = onChatEvent((chatEvent) => {
 })
 
 // ai.ts
-function handleStreamEvent(event: SSEEvent, assistantIndex: number) {
+function handleStreamEvent(event: StreamEvent, assistantIndex: number) {
   switch (event.type) {
     case 'text_delta':
       updateMessage({ content: msg.content + event.content })
@@ -736,7 +736,7 @@ function handleStreamEvent(event: SSEEvent, assistantIndex: number) {
 `packages/ai/shared/events.ts` 定义了所有事件类型：
 
 ```typescript
-export type SSEEvent =
+export type StreamEvent =
   | TextDeltaEvent
   | ThinkingDeltaEvent
   | SchemaStartEvent
@@ -759,15 +759,18 @@ export type SSEEvent =
   | ResumeEvent
   | DoneEvent
   | ErrorEvent
+
+/** @deprecated 使用 StreamEvent 替代 */
+export type SSEEvent = StreamEvent
 ```
 
 ### 12.2 使用方式
 
 ```typescript
-import type { SSEEvent } from '@schema-platform/ai-shared'
+import type { StreamEvent } from '@schema-platform/ai-shared'
 
 // 类型安全的事件处理
-function handleEvent(event: SSEEvent) {
+function handleEvent(event: StreamEvent) {
   switch (event.type) {
     case 'text_delta':
       // event.content 类型为 string

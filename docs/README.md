@@ -13,7 +13,7 @@ pnpm --filter @schema-form/ai-app build  # 构建
 
 参见 [平台集成指南](../../docs/integration-guide.md#三ai智能助手)：
 - qiankun 微前端接入
-- SSE 流式 API
+- WebSocket 流式 API (Socket.IO)
 - MCP 协议（3 个 MCP Server）
 - SDK 独立使用
 - 事件协议（12 种事件类型）

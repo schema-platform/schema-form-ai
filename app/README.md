@@ -4,7 +4,7 @@ AI 智能助手 -- 对话式 Schema 生成、流程编排、版本管理。
 
 ## 项目简介
 
-Schema Form Platform 的 AI 交互层，通过自然语言对话驱动表单 Schema 和流程图的生成。支持多 Agent 协作、RAG 知识库检索、SSE 流式响应，可独立使用或通过微前端嵌入 Editor/Flow 侧边栏。
+Schema Form Platform 的 AI 交互层，通过自然语言对话驱动表单 Schema 和流程图的生成。支持多 Agent 协作、RAG 知识库检索、WebSocket 流式响应，可独立使用或通过 qiankun 微前端嵌入 Editor/Flow 侧边栏。
 
 ## 技术栈
 
@@ -12,9 +12,9 @@ Schema Form Platform 的 AI 交互层，通过自然语言对话驱动表单 Sch
 |---|---|
 | 框架 | Vue 3.5 + TypeScript 5.7 |
 | UI | Element Plus 2.9 |
-| 通信 | SSE 流式 + REST API |
+| 通信 | WebSocket (Socket.IO) + REST API |
 | 样式 | CSS Modules |
-| 微前端 | @micro-zoe/micro-app |
+| 微前端 | qiankun |
 | 构建 | Vite 6 |
 
 ## 端口配置
@@ -36,7 +36,7 @@ Schema Form Platform 的 AI 交互层，通过自然语言对话驱动表单 Sch
 ### 对话面板
 
 - Markdown 渲染 + 代码高亮
-- SSE 流式输出
+- WebSocket 流式输出
 - 多模态输入（图片、PDF、Word、TXT）
 - @ 提及 + RAG 检索引用
 - 任务链进度展示

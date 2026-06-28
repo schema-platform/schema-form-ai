@@ -566,7 +566,7 @@ export const allTools = [
 用户输入
     │
     ▼
-AiSidebarView.vue
+AiChatView.vue
     │
     ▼
 useAiStore.sendMessage()
@@ -575,7 +575,7 @@ useAiStore.sendMessage()
 useStreamStore.executeStream()
     │
     ▼
-emitChatSend() ── WebSocket ──► Server
+emitChatSend() ── Socket.IO ──► Server
     │
     ▼
 chatStreamHandler.ts
@@ -599,13 +599,13 @@ graph.streamEvents()
     │       │
     │       └── 工具调用 ──► ToolNode ──► toolHandlers.ts
     │
-    └── 流式事件 ──► sendEvent() ──► WebSocket ──► Client
+    └── 流式事件 ──► sendEvent() ──► Socket.IO ──► Client
 ```
 
 ### 7.2 前端事件处理
 
 ```
-onChatEvent()
+onChatEvent()  (Socket.IO)
     │
     ▼
 handleStreamEvent()
@@ -915,7 +915,7 @@ packages/ai/
 │   │   │   ├── ai.ts       # 主 Store（处理 v2 事件）
 │   │   │   └── stream.ts
 │   │   ├── types/          # 类型定义
-│   │   │   └── index.ts    # 含 RequirementAnalysis 类型
+│   │   │   └── index.ts    # 含 RequirementAnalysis、StreamEvent 类型
 │   │   └── views/
 │   │       └── AiSidebarView.vue
 │
