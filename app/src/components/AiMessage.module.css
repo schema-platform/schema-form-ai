@@ -335,7 +335,16 @@
   bottom: -36px;
   left: 0;
   z-index: 10;
-  animation: fadeIn 0.2s ease;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+
+.actionMenuVisible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 @keyframes fadeIn {

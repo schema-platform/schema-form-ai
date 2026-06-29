@@ -559,7 +559,10 @@ const steps = computed<StepData[]>(() => {
       </template>
 
       <!-- Action menu (hover 300ms to show) -->
-      <div v-if="role === 'assistant' && !loading && showActions" :class="$style.actionMenu">
+      <div
+        v-if="role === 'assistant' && !loading"
+        :class="[$style.actionMenu, { [$style.actionMenuVisible]: showActions }]"
+      >
         <el-tooltip content="复制" placement="top" :show-after="300">
           <button :class="$style.actionBtn" @click="handleCopy">
             <AppIcon name="copy-document" :size="14" />

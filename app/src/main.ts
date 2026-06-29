@@ -6,6 +6,8 @@ import './styles/ai-theme-bridge.css'
 import { createApp, type App } from 'vue'
 import { createPinia } from 'pinia'
 import { setupElementPlus } from '@schema-platform/platform-shared/config/element'
+import { initQiankunProps } from '@schema-platform/platform-shared/qiankun'
+import { aiLog } from '@schema-platform/platform-shared/utils/logger'
 import AppRoot from './App.vue'
 import { createAiRouter } from './router'
 import { setTokenProvider } from './api/aiApi'
@@ -13,7 +15,7 @@ import { setTokenProvider } from './api/aiApi'
 let app: App | null = null
 let router: ReturnType<typeof createAiRouter> | null = null
 
-let currentRouteBase = '/'
+let currentRouteBase: string | undefined
 let tokenProviderSet = false
 
 function render() {
@@ -36,12 +38,17 @@ function render() {
 // ── Qiankun 生命周期（vite-plugin-qiankun 要求通过 ES module 导出）──
 
 export async function bootstrap() {
-  console.log('[ai] bootstrap')
+  aiLog.lifecycle('bootstrap')
 }
 
 export async function mount(props: Record<string, unknown>) {
-  console.log('[ai] mount start')
+  aiLog.lifecycle('mount start')
   document.getElementById('loading')?.remove()
+
+  // 注入 shell props → globalState 事件通道
+  if (typeof props.onGlobalStateChange === 'function' && typeof props.setGlobalState === 'function') {
+    initQiankunProps(props as any)
+  }
 
   // token
   const getToken = props.getToken as (() => string) | undefined
@@ -53,7 +60,7 @@ export async function mount(props: Record<string, unknown>) {
   if (mode === 'sidebar') {
     currentRouteBase = '/sidebar'
   } else {
-    // 直接用 shell 传递的 routeBase
+    // routeBase：shell 下发优先，否则用环境变量
     const getRouteBase = props.getRouteBase as (() => string) | undefined
     if (getRouteBase) {
       currentRouteBase = getRouteBase()
@@ -64,11 +71,11 @@ export async function mount(props: Record<string, unknown>) {
 
   const emitEvent = props.emitEvent as ((event: string, data: unknown) => void) | undefined
   emitEvent?.('shell:sub-app-mounted', { app: 'ai' })
-  console.log('[ai] mount done')
+  aiLog.lifecycle('mount done')
 }
 
 export async function unmount() {
-  console.log('[ai] unmount')
+  aiLog.lifecycle('unmount')
   if (app) {
     app.unmount()
     app = null

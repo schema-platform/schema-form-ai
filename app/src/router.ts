@@ -1,13 +1,8 @@
-import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import { useQiankun } from '@schema-platform/platform-shared/qiankun'
-import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
 
 // SSO 客户端配置
 const TOKEN_KEY = 'sfp_access_token'
-
-// 开发环境使用 /，生产环境使用配置的 basePath
-const isDev = import.meta.env.DEV
-const APP_BASE = isDev ? '/' : APP_CONFIGS.ai.basePath
 
 // qiankun 模式下使用 memory history，避免子应用路由篡改宿主 URL
 const isQiankun = () => !!window.__POWERED_BY_QIANKUN__
@@ -50,11 +45,10 @@ const routes = [
   },
 ]
 
-export function createAiRouter(initialPath?: string) {
+export function createAiRouter(routeBase?: string) {
+  const base = routeBase || import.meta.env.VITE_ROUTE_BASE || '/'
   const router = createRouter({
-    history: isQiankun()
-      ? createMemoryHistory(initialPath || undefined)
-      : createWebHistory(APP_BASE),
+    history: createWebHistory(base),
     routes,
   })
 
