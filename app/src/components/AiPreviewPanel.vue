@@ -760,4 +760,4 @@ function getNodeStatusColor(nodeId: string): string | undefined {
   </div>
 </template>
 
-<style module src="./AiPreviewPanel.module.css" />
+<style module src="./AiPreviewPanel.module.scss" />

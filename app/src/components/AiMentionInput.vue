@@ -300,4 +300,4 @@ function typeIcon(type: string): string {
   </div>
 </template>
 
-<style module src="./AiMentionInput.module.css" />
+<style module src="./AiMentionInput.module.scss" />

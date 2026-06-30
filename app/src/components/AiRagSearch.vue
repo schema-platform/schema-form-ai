@@ -146,4 +146,4 @@ function getScoreClass(score: number): string {
   </div>
 </template>
 
-<style module src="./AiRagSearch.module.css" />
+<style module src="./AiRagSearch.module.scss" />

@@ -137,15 +137,35 @@ const hasToolResult = computed(() =>
   props.type === 'tool_call' && props.toolResult !== undefined,
 )
 
+/**
+ * 将 toolResult 规范化为对象。
+ * rag_search 等工具返回 JSON.stringify(result)，存入 MongoDB 后仍是字符串，
+ * 历史回显时需要先解析。
+ */
+function normalizeToolResult(raw: unknown): Record<string, unknown> | null {
+  if (!raw) return null
+  if (typeof raw === 'object') return raw as Record<string, unknown>
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw)
+      if (parsed && typeof parsed === 'object') return parsed as Record<string, unknown>
+    } catch { /* not JSON */ }
+  }
+  return null
+}
+
+/** 解析后的 toolResult，历史回显时从 JSON 字符串还原为对象 */
+const parsedToolResult = computed(() => normalizeToolResult(props.toolResult))
+
 const toolResultSummary = computed(() => {
-  if (!props.toolResult || typeof props.toolResult !== 'object') return null
-  const r = props.toolResult as Record<string, unknown>
+  const r = parsedToolResult.value
+  if (!r) return null
   return typeof r.summary === 'string' ? r.summary : null
 })
 
 const compactResult = computed(() => {
-  if (!props.toolResult || typeof props.toolResult !== 'object') return null
-  const r = props.toolResult as Record<string, unknown>
+  const r = parsedToolResult.value
+  if (!r) return null
   if (!SEARCH_TOOL_NAMES.has(props.toolName ?? '')) return null
   if (r.error) return null
 
@@ -326,7 +346,7 @@ const highlightedJson = computed(() => {
             </ul>
             <details :class="$style.rawDetails">
               <summary>查看原始数据</summary>
-              <div :class="$style.toolJson"><pre>{{ JSON.stringify(toolResult, null, 2) }}</pre></div>
+              <div :class="$style.toolJson"><pre>{{ JSON.stringify(parsedToolResult ?? toolResult, null, 2) }}</pre></div>
             </details>
           </div>
           <!-- 非搜索工具：保持原样 -->
@@ -335,7 +355,7 @@ const highlightedJson = computed(() => {
               <div :class="$style.toolSectionLabel">结果</div>
               <div v-if="toolResultSummary" :class="$style.toolSummary">{{ toolResultSummary }}</div>
               <div :class="$style.toolJson">
-                <pre>{{ JSON.stringify(toolResult, null, 2) }}</pre>
+                <pre>{{ JSON.stringify(parsedToolResult ?? toolResult, null, 2) }}</pre>
               </div>
             </div>
           </template>

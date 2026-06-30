@@ -63,4 +63,4 @@ watch(() => props.currentIndex, () => {
   </div>
 </template>
 
-<style module src="./TaskChainBar.module.css" />
+<style module src="./TaskChainBar.module.scss" />

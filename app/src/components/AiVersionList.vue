@@ -121,4 +121,4 @@ function getTypeColor(type: AIVersion['type']): string {
   </div>
 </template>
 
-<style module src="./AiVersionList.module.css" />
+<style module src="./AiVersionList.module.scss" />

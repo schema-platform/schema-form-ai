@@ -45,8 +45,17 @@ const routes = [
   },
 ]
 
+function inferRouteBase(): string {
+  const p = window.location.pathname
+  const match = p.match(/^(.+?\/)(app|standalone)\/([^/]+)(\/|$)/)
+  if (match) {
+    return `${match[1]}${match[2]}/${match[3]}`
+  }
+  return ''
+}
+
 export function createAiRouter(routeBase?: string) {
-  const base = routeBase || import.meta.env.VITE_ROUTE_BASE || '/'
+  const base = routeBase || inferRouteBase() || import.meta.env.VITE_ROUTE_BASE || '/'
   const router = createRouter({
     history: createWebHistory(base),
     routes,

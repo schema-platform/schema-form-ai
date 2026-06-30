@@ -326,4 +326,4 @@ function getStatusLabel(status: string): string {
   </div>
 </template>
 
-<style module src="./AiVersionCompare.module.css" />
+<style module src="./AiVersionCompare.module.scss" />

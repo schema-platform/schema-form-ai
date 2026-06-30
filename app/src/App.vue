@@ -27,8 +27,11 @@ const useLayout = computed(() => !noLayoutRoutes.includes(route.path))
 </template>
 
 <style>
-/* RouterView 的直接父容器必须撑满 */
-#ai-app > :first-child {
+/* qiankun 模式下撑满容器 */
+#ai-app,
+#ai-app > div,
+#ai-app > div > div {
+  width: 100%;
   height: 100%;
 }
 </style>

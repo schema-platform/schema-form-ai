@@ -88,4 +88,4 @@ const changeCount = computed(() =>
   </div>
 </template>
 
-<style module src="./SchemaDiffPanel.module.css" />
+<style module src="./SchemaDiffPanel.module.scss" />

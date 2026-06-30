@@ -43,9 +43,19 @@ function handleOpenConversationDrawer(): void {
   conversationDrawerVisible.value = true
 }
 
-function handleSelectConversation(id: string): void {
-  store.loadConversation(id)
-  conversationDrawerVisible.value = false
+async function handleSelectConversation(id: string): Promise<void> {
+  try {
+    await store.loadConversation(id)
+    conversationDrawerVisible.value = false
+  } catch (err) {
+    const status = (err as { status?: number }).status
+    if (status === 404) {
+      message.error('对话不存在或已被删除')
+      store.loadConversations()
+    } else {
+      message.error('加载对话失败：' + (err instanceof Error ? err.message : '未知错误'))
+    }
+  }
 }
 
 function handleDeleteConversation(id: string): void {
@@ -69,16 +79,7 @@ function handleSaveSettings(settings: ChatSettings): void {
 
 // ---- 新对话按钮文案 ----
 const newConversationLabel = computed(() => {
-  if (!currentConversationId.value) {
-    return '新对话'
-  }
-  const currentConv = conversations.value.find(c => c.id === currentConversationId.value)
-  if (!currentConv || !currentConv.title || currentConv.title === '新对话') {
-    return '新对话'
-  }
-  // 截断标题
-  const title = currentConv.title
-  return title.length > 8 ? title.slice(0, 8) + '...' : title
+  return '新对话'
 })
 
 // ---- Event handlers ----
@@ -316,4 +317,4 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style module src="./AiChatView.module.css" />
+<style module src="./AiChatView.module.scss" />

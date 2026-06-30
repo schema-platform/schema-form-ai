@@ -40,6 +40,21 @@ function startStatusCheck(): void {
 // ---- History Popover ----
 const historyVisible = ref(false)
 
+async function handleSelectHistory(id: string): Promise<void> {
+  try {
+    await store.loadConversation(id)
+    historyVisible.value = false
+  } catch (err) {
+    const status = (err as { status?: number }).status
+    if (status === 404) {
+      message.error('对话不存在或已被删除')
+      store.loadConversations()
+    } else {
+      message.error('加载对话失败：' + (err instanceof Error ? err.message : '未知错误'))
+    }
+  }
+}
+
 // 上下文标签（根据宿主传入的 source 自动判断）
 const contextLabel = computed(() => {
   const ctx = store.context
@@ -306,7 +321,7 @@ function handleHostData(data: Record<string, unknown>) {
                 v-for="conv in store.conversations"
                 :key="conv.id"
                 :class="[$style.historyItem, { [$style.historyActive]: conv.id === store.currentConversationId }]"
-                @click="store.loadConversation(conv.id); historyVisible = false"
+                @click="handleSelectHistory(conv.id)"
               >
                 <div :class="$style.historyTitle">{{ conv.title }}</div>
                 <div :class="$style.historyMeta">

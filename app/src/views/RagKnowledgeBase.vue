@@ -421,4 +421,4 @@ onMounted(() => {
   </div>
 </template>
 
-<style module src="./RagKnowledgeBase.module.css" />
+<style module src="./RagKnowledgeBase.module.scss" />

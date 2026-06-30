@@ -1,7 +1,7 @@
 import 'element-plus/dist/index.css'
 import '@schema-platform/platform-shared/styles/theme.scss'
 import '@schema-platform/platform-shared/styles/css-variables.scss'
-import './styles/ai-theme-bridge.css'
+import './styles/ai-theme-bridge.scss'
 
 import { createApp, type App } from 'vue'
 import { createPinia } from 'pinia'
@@ -43,6 +43,14 @@ export async function bootstrap() {
 
 export async function mount(props: Record<string, unknown>) {
   aiLog.lifecycle('mount start')
+
+  // 二次 mount 时先清理旧实例
+  if (app) {
+    try { app.unmount() } catch { /* ignore */ }
+    app = null
+    router = null
+  }
+
   document.getElementById('loading')?.remove()
 
   // 注入 shell props → globalState 事件通道

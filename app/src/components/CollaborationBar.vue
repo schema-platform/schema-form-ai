@@ -100,4 +100,4 @@ function handleLeave(): void {
   </div>
 </template>
 
-<style module src="./CollaborationBar.module.css" />
+<style module src="./CollaborationBar.module.scss" />
